@@ -1,0 +1,2 @@
+#cmakedefine JEVENTS_FOUND
+#cmakedefine HAVE_BGPM
