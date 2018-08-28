@@ -44,7 +44,8 @@ public:
 
 };
 
-std::ostream &operator<<(std::ostream &os, const struct perf_event_attr &c) {
+inline std::ostream &operator<<(std::ostream &os,
+                                const struct perf_event_attr &c) {
   os << std::hex << c.type << " " << std::dec << " " << c.size << std::hex
      << " " << c.config << std::dec;
   return os;
