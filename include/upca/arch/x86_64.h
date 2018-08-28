@@ -19,6 +19,10 @@
 #include <sys/types.h>
 
 #ifdef JEVENTS_FOUND
+
+#include <inttypes.h>
+#include <unistd.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,7 +37,11 @@ extern "C" {
 
 #endif
 
-class x86_64_pmu {
+namespace upca {
+namespace arch {
+namespace x86_64 {
+
+class x86_64_base_pmu {
 public:
   uint64_t timestamp_begin() {
     unsigned high, low;
@@ -58,13 +66,6 @@ public:
 };
 
 #ifdef JEVENTS_FOUND
-
-#include <inttypes.h>
-#include <unistd.h>
-
-namespace upca {
-namespace arch {
-namespace x86_64 {
 
 #ifndef __APPLE__
 
@@ -319,8 +320,7 @@ public:
       const int err = ACCESS::init(active, pmc.data().config);
       if (err) {
         std::cerr << "Error configuring PMU " << pmc.name() << " with "
-                  << std::hex << pmc.data().config << std::dec
-                  << std::endl;
+                  << std::hex << pmc.data().config << std::dec << std::endl;
         continue;
       }
       ++active;
@@ -456,7 +456,7 @@ public:
 };
 
 template <typename MCK, typename LINUX>
-class x86_linux_mckernel : public x86_64_pmu {
+class x86_linux_mckernel : public x86_64_base_pmu {
   std::unique_ptr<x86_pmc_base> backend_;
 
 public:
@@ -472,9 +472,30 @@ public:
   void start(gsl::span<uint64_t>::iterator it) { backend_->start(it); }
   void stop(gsl::span<uint64_t>::iterator it) { backend_->stop(it); }
 };
+
+#else
+
+class x86_64_pmu : public x86_64_base_pmu {
+  struct default_resolver {
+    struct null_type {};
+    using config_type = null_type;
+    static null_type resolve(const std::string &name) {
+      throw std::runtime_error(
+          "PMC support not compiled in; libjevents missing");
+    }
+  };
+
+public:
+  using resolver_type = default_resolver;
+  template <typename T> x86_64_pmu(const T &) {}
+
+  void start(gsl::span<uint64_t>::iterator) {}
+  void stop(gsl::span<uint64_t>::iterator) {}
+};
+
+#endif /* JEVENTS_FOUND */
+
 } // namespace x86_64
 } // namespace arch
 } // namespace upca
-
-#endif /* JEVENTS_FOUND */
 
