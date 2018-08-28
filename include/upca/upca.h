@@ -8,7 +8,7 @@
 
 #include <gsl/gsl>
 
-#include <config.h>
+#include <upca/config.h>
 
 #ifdef JEVENTS_FOUND
 #include "backends/jevents.h"
