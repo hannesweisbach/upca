@@ -12,6 +12,20 @@
 namespace upca {
 namespace arch {
 
+namespace detail {
+template <const char *Reason> struct null_resolver {
+  struct null_type {
+    friend std::ostream &operator<<(std::ostream &os, const null_type &) {
+      return os;
+    }
+  };
+  using config_type = null_type;
+  static null_type resolve(const std::string &name) {
+    throw std::runtime_error(Reason);
+  }
+};
+} // namespace detail
+
 template <typename ARCH> class arch_common_base final {
 private:
   ptrdiff_t offset_ = 0;

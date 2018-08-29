@@ -475,18 +475,14 @@ public:
 
 #else
 
-class x86_64_pmu : public x86_64_base_pmu {
-  struct default_resolver {
-    struct null_type {};
-    using config_type = null_type;
-    static null_type resolve(const std::string &name) {
-      throw std::runtime_error(
-          "PMC support not compiled in; libjevents missing");
-    }
-  };
+namespace {
+static constexpr const char reason[] =
+    "PMC support not compiled in; libjevents missing";
+}
 
+class x86_64_pmu : public x86_64_base_pmu {
 public:
-  using resolver_type = default_resolver;
+  using resolver_type = upca::arch::detail::null_resolver<reason>;
   template <typename T> x86_64_pmu(const T &) {}
 
   void start(gsl::span<uint64_t>::iterator) {}
