@@ -64,6 +64,8 @@ public:
 
 #ifdef __aarch64__
 #  include "aarch64.h"
+#elif defined(__ARM_ARCH_7A__)
+#  include "aarch32.h"
 #elif defined(__sparc)
 #  include "sparc.h"
 #elif defined(__x86_64__)
