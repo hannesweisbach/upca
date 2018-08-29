@@ -4,8 +4,6 @@
 #error "Don't include this file directly. Use #include <upca/upca.h>."
 #endif
 
-#include <config.h>
-
 #include <iostream>
 #include <memory>
 #include <sstream>
