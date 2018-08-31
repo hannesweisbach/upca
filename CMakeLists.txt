@@ -78,6 +78,6 @@ install(DIRECTORY include/upca DESTINATION include)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/upca/config.h DESTINATION include/upca)
 
 if (UPCA_STANDALONE_PROJECT)
-  add_executable(upca-test main.cc)
-  target_link_libraries(upca-test upca)
+  add_executable(example example.cc)
+  target_link_libraries(example upca)
 endif ()
