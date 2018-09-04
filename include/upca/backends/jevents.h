@@ -25,7 +25,7 @@ class jevents_resolver {
    * https://github.com/andikleen/pmu-tools/tree/master/jevents#initializationmultithreading
    */
   struct jevent_initializer {
-    jevent_initializer() { read_events(NULL); }
+    jevent_initializer() { read_events(nullptr); }
   };
   static struct jevent_initializer init_;
 

@@ -24,8 +24,8 @@ public:
   uint64_t timestamp_begin() { return timestamp(); }
   uint64_t timestamp_end() { return timestamp(); }
 
-  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t> o) {}
-  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> o) {}
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) { return 0; }
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) { return 0; }
 };
 
 } // namespace aarch32

@@ -49,7 +49,7 @@ public:
                      "mov %%eax, %1\n\t"
                      : "=r"(high), "=r"(low)::"%rax", "%rbx", "%rcx", "%rdx");
 
-    return (uint64_t)high << 32ULL | low;
+    return static_cast<uint64_t>(high) << 32 | low;
   }
 
   uint64_t timestamp_end() {
@@ -59,7 +59,7 @@ public:
                      "mov %%eax,%1\n\t"
                      "CPUID\n\t"
                      : "=r"(high), "=r"(low)::"%rax", "%rbx", "%rcx", "%rdx");
-    return (uint64_t)high << 32ULL | low;
+    return static_cast<uint64_t>(high) << 32 | low;
   }
 };
 
@@ -68,27 +68,30 @@ public:
 #ifndef __APPLE__
 
 /*
- * SYSCALL_HANDLED(601, pmc_init)
+ * SYSCALL_HANDLED(601, pmc_init) int counter, int type, int mode
  * SYSCALL_HANDLED(602, pmc_start)
  * SYSCALL_HANDLED(603, pmc_stop)
  * SYSCALL_HANDLED(604, pmc_reset)
+ *
+ * Yes, the interface is that fucked up. counter is either int or unsigned long,
+ * depending on the syscall …
  */
 
-static int mck_pmc_init(int counter, int type, unsigned mode) {
+static inline long mck_pmc_init(int counter, int type, unsigned mode) {
   return syscall(601, counter, type, mode);
 }
 
-static int mck_pmc_start(unsigned long counter) {
+static inline long mck_pmc_start(unsigned long counter) {
   return syscall(602, counter);
 }
-static int mck_pmc_stop(unsigned long counter) { return syscall(603, counter); }
-static int mck_pmc_reset(int counter) { return syscall(604, counter); }
+static inline long mck_pmc_stop(unsigned long counter) { return syscall(603, counter); }
+static inline long mck_pmc_reset(int counter) { return syscall(604, counter); }
 
-static int mck_is_mckernel() { return syscall(732) == 0; }
+static inline int mck_is_mckernel() { return syscall(732) == 0; }
 
 #else
 
-static int mck_is_mckernel() { return 0; }
+static inline int mck_is_mckernel() { return 0; }
 
 #endif
 
@@ -113,7 +116,7 @@ public:
   friend bool operator!=(const fd &l, const fd &r) { return !(l == r); }
 };
 
-static std::unique_ptr<fd> make_perf_fd(struct perf_event_attr &attr) {
+static inline std::unique_ptr<fd> make_perf_fd(struct perf_event_attr &attr) {
   const int fd = perf_event_open(&attr, 0, -1, -1, 0);
 
   if (fd < 0) {
@@ -127,7 +130,7 @@ static std::unique_ptr<fd> make_perf_fd(struct perf_event_attr &attr) {
 static uint64_t rdpmc(const uint32_t counter) {
   uint32_t low, high;
   __asm__ volatile("rdpmc" : "=a"(low), "=d"(high) : "c"(counter));
-  return (uint64_t)high << 32 | low;
+  return static_cast<uint64_t>(high) << 32 | low;
 }
 
 enum msrs {
@@ -202,33 +205,36 @@ struct x86_pmc_base {
 };
 
 struct mck_mck_policy {
-  static int init(const int active, const int config) {
-    return mck_pmc_init(active, config, 0x4);
+  static long init(const int active, const uint64_t config) {
+    return mck_pmc_init(active, gsl::narrow<int>(config), 0x4);
   }
 
   /* writes MSR_IA32_PMC0 + i to 0 */
   static void reset(const int i) { mck_pmc_reset(i); }
   /* sets and clears bits in MSR_PERF_GLOBAL_CTRL */
   static void start(const unsigned long mask) {
-    const int err = mck_pmc_start(mask);
+    const auto err = mck_pmc_start(mask);
     if (err) {
       std::cerr << "Error starting PMCs" << std::endl;
     }
   }
   static void stop(const unsigned long mask) {
-    const int err = mck_pmc_stop(mask);
+    const auto err = mck_pmc_stop(mask);
     if (err) {
       std::cerr << "Error stopping PMCs" << std::endl;
     }
   }
-  static uint64_t read(const int i) { return rdpmc(i); }
+  static uint64_t read(const unsigned i) { return rdpmc(i); }
 };
 
 class msr_mck {
 public:
   msr_mck() {}
-  uint64_t rdmsr(const uint32_t reg) const { return syscall(850, reg); }
-  uint64_t wrmsr(const uint32_t reg, const uint64_t val) const {
+  uint64_t rdmsr(const uint32_t reg) const {
+    return static_cast<unsigned long>(syscall(850, reg));
+  }
+  auto wrmsr(const uint32_t reg, const uint64_t val) const {
+    /* always returns 0 */
     return syscall(851, reg, val);
   }
 };
@@ -247,7 +253,7 @@ class msr_linux {
      * - has a single CPU
      * - this single CPU is this CPU
      */
-    return cpu;
+    return static_cast<unsigned>(cpu);
   }
 
 public:
@@ -265,7 +271,7 @@ public:
     return v;
   }
 
-  uint64_t wrmsr(const uint32_t reg, const uint64_t val) const {
+  auto wrmsr(const uint32_t reg, const uint64_t val) const {
     const ssize_t ret = pwrite(static_cast<int>(*fd_), &val, sizeof(val), reg);
     if (ret != sizeof(val)) {
       std::cerr << "Writing MSR " << std::hex << reg << std::dec << " failed."
@@ -283,18 +289,20 @@ public:
     // pmu_info(static_cast<MSR&>(*this));
   }
   ~rawmsr_policy() { this->wrmsr(IA32_PERF_GLOBAL_CTRL, global_ctrl_); }
-  int init(const int i, const int config) {
+  int init(const int i, const uint64_t config) {
     const uint64_t v = (1 << 22) | (1 << 16) | config;
-    this->wrmsr(IA32_PERFEVTSEL_BASE + i, v);
+    this->wrmsr(IA32_PERFEVTSEL_BASE + static_cast<uint32_t>(i), v);
     return 0;
   }
 
-  void reset(const int i) { this->wrmsr(IA32_PMC_BASE + i, 0); }
+  void reset(const int i) {
+    this->wrmsr(IA32_PMC_BASE + static_cast<uint32_t>(i), 0);
+  }
   void start(const unsigned long mask) {
     this->wrmsr(IA32_PERF_GLOBAL_OVF_CTRL, 0);
     this->wrmsr(IA32_PERF_GLOBAL_CTRL, mask);
   }
-  void stop(const unsigned long mask) {
+  void stop(const unsigned long /* mask */) {
     this->wrmsr(IA32_PERF_GLOBAL_CTRL, 0);
     const uint64_t ovf = this->rdmsr(IA32_PERF_GLOBAL_STATUS);
     if (ovf) {
@@ -303,19 +311,19 @@ public:
     }
   }
   /* Should be equivalent to rdpmc instruction */
-  uint64_t read(const int i) { return this->rdmsr(IA32_PMC_BASE + i); }
+  uint64_t read(const unsigned i) { return this->rdmsr(IA32_PMC_BASE + i); }
 };
 
 template <typename ACCESS> class msr_pmc final : ACCESS, public x86_pmc_base {
-  int active = 0;
   unsigned long active_mask_ = 0;
+  int active = 0;
 
 public:
   using resolver_type = upca::arch::jevents_resolver;
 
   template <typename T> msr_pmc(const T &pmcs) {
     for (const auto &pmc : pmcs) {
-      const int err = ACCESS::init(active, pmc.data().config);
+      const auto err = ACCESS::init(active, pmc.data().config);
       if (err) {
         std::cerr << "Error configuring PMU " << pmc.name() << " with "
                   << std::hex << pmc.data().config << std::dec << std::endl;
@@ -339,7 +347,7 @@ public:
   gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> buf) override {
     ACCESS::stop(active_mask_);
     for (int i = 0; i < active; ++i) {
-      buf[i] = ACCESS::read(i);
+      buf[i] = ACCESS::read(static_cast<uint32_t>(i));
     }
     return active;
   }
@@ -355,7 +363,7 @@ class linux_jevents final : public x86_pmc_base {
     int close = 0;
 
     rdpmc_t(struct perf_event_attr attr) {
-      const int err = rdpmc_open_attr(&attr, &ctx, NULL);
+      const int err = rdpmc_open_attr(&attr, &ctx, nullptr);
       if (err) {
         throw std::runtime_error(std::to_string(errno) + ' ' + strerror(errno));
       }
@@ -445,7 +453,7 @@ public:
   }
 
   gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> buf) override {
-    long long v;
+    uint64_t v;
     int idx = 0;
     for (const auto &perf_fd : perf_fds) {
       const auto ret = read(static_cast<int>(*perf_fd), &v, sizeof(v));
@@ -477,8 +485,8 @@ public:
                                    : static_cast<std::unique_ptr<x86_pmc_base>>(
                                          std::make_unique<LINUX>(pmcs))) {}
 
-  decltype(auto) start(gsl::span<uint64_t> o) { return backend_->start(o); }
-  decltype(auto) stop(gsl::span<uint64_t> o) { return backend_->stop(o); }
+  auto start(gsl::span<uint64_t> o) { return backend_->start(o); }
+  auto stop(gsl::span<uint64_t> o) { return backend_->stop(o); }
 };
 
 #else
