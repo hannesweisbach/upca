@@ -30,11 +30,7 @@ template <typename ARCH> class arch_common_base final {
 private:
   ptrdiff_t offset_ = 0;
   const ptrdiff_t slice_;
-  gsl::span<uint64_t> span_;
   ARCH arch_;
-
-  auto current_pmu_span() { return span_.subspan(offset_ + 1, slice_ - 1); }
-  auto &&current_time() { return span_.subspan(offset_, 1)[0]; }
 
   template <typename T> friend class resolver;
 
@@ -42,20 +38,19 @@ public:
   using resolver_type = typename ARCH::resolver_type;
 
   template <typename C>
-  arch_common_base(const C &pmcs, gsl::span<uint64_t> output)
-      : slice_(pmcs.size()), span_(output), arch_(pmcs) {}
+  arch_common_base(const C &pmcs, const unsigned external_pmcs = 0)
+      : slice_(pmcs.size() + external_pmcs), arch_(pmcs) {}
 
-  void start() {
-    auto pmu_span = current_pmu_span();
-    arch_.start(pmu_span.begin());
-    current_time() = arch_.timestamp_begin();
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t> output) {
+    const auto count = arch_.start(output.subspan(1, slice_ - 1));
+    output[0] = arch_.timestamp_begin();
+    return count + 1;
   }
 
-  void stop() {
-    current_time() = arch_.timestamp_end() - current_time();
-    auto pmu_span = current_pmu_span();
-    arch_.stop(pmu_span.begin());
-    offset_ += slice_;
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> output) {
+    output[0] = arch_.timestamp_end() - output[0];
+    const auto count = arch_.stop(output.subspan(1, slice_ - 1));
+    return count + 1;
   }
 };
 

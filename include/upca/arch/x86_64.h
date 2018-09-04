@@ -197,8 +197,8 @@ template <typename POLICY> static void pmu_info(const POLICY &msr) {
 
 struct x86_pmc_base {
   virtual ~x86_pmc_base() = default;
-  virtual void start(gsl::span<uint64_t>::iterator) = 0;
-  virtual void stop(gsl::span<uint64_t>::iterator) = 0;
+  virtual gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) = 0;
+  virtual gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) = 0;
 };
 
 struct mck_mck_policy {
@@ -327,19 +327,21 @@ public:
     active_mask_ = static_cast<unsigned long>((1 << active) - 1);
   }
 
-  void start(gsl::span<uint64_t>::iterator) override {
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) override {
     for (int i = 0; i < active; ++i) {
       ACCESS::reset(i);
     }
     ACCESS::start(active_mask_);
+
+    return active;
   }
 
-  void stop(gsl::span<uint64_t>::iterator buf) override {
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> buf) override {
     ACCESS::stop(active_mask_);
     for (int i = 0; i < active; ++i) {
-      *buf = ACCESS::read(i);
-      ++buf;
+      buf[i] = ACCESS::read(i);
     }
+    return active;
   }
 };
 
@@ -386,18 +388,22 @@ public:
     }
   }
 
-  void start(gsl::span<uint64_t>::iterator buf) override {
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t> buf) override {
+    int idx = 0;
     for (auto &&pmc : rdpmc_ctxs) {
-      *buf = pmc.read();
-      ++buf;
+      buf[idx] = pmc.read();
+      ++idx;
     }
+    return idx;
   }
 
-  void stop(gsl::span<uint64_t>::iterator buf) override {
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> buf) override {
+    int idx = 0;
     for (auto &&pmc : rdpmc_ctxs) {
-      *buf = pmc.read() - *buf;
-      ++buf;
+      buf[idx] = pmc.read() - buf[idx];
+      ++idx;
     }
+    return idx;
   }
 };
 
@@ -428,16 +434,19 @@ public:
     }
   }
 
-  void start(gsl::span<uint64_t>::iterator) override {
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) override {
     for (const auto &perf_fd : perf_fds) {
       if (ioctl(static_cast<int>(*perf_fd), PERF_EVENT_IOC_RESET, 0)) {
         std::cerr << "Error in ioctl\n";
       }
     }
+
+    return static_cast<gsl::span<uint64_t>::index_type>(perf_fds.size());
   }
 
-  void stop(gsl::span<uint64_t>::iterator buf) override {
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> buf) override {
     long long v;
+    int idx = 0;
     for (const auto &perf_fd : perf_fds) {
       const auto ret = read(static_cast<int>(*perf_fd), &v, sizeof(v));
       if (ret < 0) {
@@ -447,9 +456,10 @@ public:
         std::cerr << "perf: Error reading " << sizeof(v) << " bytes."
                   << std::endl;
       }
-      *buf = v;
-      ++buf;
+      buf[idx] = v;
+      ++idx;
     }
+    return idx;
   }
 };
 
@@ -467,8 +477,8 @@ public:
                                    : static_cast<std::unique_ptr<x86_pmc_base>>(
                                          std::make_unique<LINUX>(pmcs))) {}
 
-  void start(gsl::span<uint64_t>::iterator it) { backend_->start(it); }
-  void stop(gsl::span<uint64_t>::iterator it) { backend_->stop(it); }
+  decltype(auto) start(gsl::span<uint64_t> o) { return backend_->start(o); }
+  decltype(auto) stop(gsl::span<uint64_t> o) { return backend_->stop(o); }
 };
 
 #else
@@ -483,8 +493,8 @@ public:
   using resolver_type = upca::arch::detail::null_resolver<reason>;
   template <typename T> x86_64_pmu(const T &) {}
 
-  void start(gsl::span<uint64_t>::iterator) {}
-  void stop(gsl::span<uint64_t>::iterator) {}
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) {}
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) {}
 };
 
 #endif /* JEVENTS_FOUND */

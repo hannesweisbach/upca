@@ -24,8 +24,8 @@ public:
   uint64_t timestamp_begin() { return timestamp(); }
   uint64_t timestamp_end() { return timestamp(); }
 
-  void start(gsl::span<uint64_t>::iterator) {}
-  void stop(gsl::span<uint64_t>::iterator) {}
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t> o) {}
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> o) {}
 };
 
 } // namespace aarch32

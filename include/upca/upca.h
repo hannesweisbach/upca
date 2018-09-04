@@ -71,8 +71,8 @@ public:
   const_iterator cend() const { return counters_.cend(); }
 
   /* Get PMU backend. Thread has to be pinned to a CPU before this is called */
-  BACKEND configure(gsl::span<uint64_t> data_) const {
-    return BACKEND(counters_, data_);
+  BACKEND configure(const unsigned additional_counters = 0) const {
+    return BACKEND(counters_, additional_counters);
   }
 };
 

@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<uint64_t> data(4);
 
-  pcs.configure(data);
+  auto roi = pcs.configure();
 
   upca::resolver<upca::arch::aarch32::aarch32_pmu> arm;
 
