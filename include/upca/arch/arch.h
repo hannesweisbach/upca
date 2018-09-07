@@ -96,7 +96,11 @@ using pmu = upca::arch::arch_common_base<upca::arch::x86_64::x86_64_pmu>;
 #endif
 
 #elif defined(__bgq__)
+
 #  include "bgq.h"
+
+using pmu = upca::arch::arch_common_base<upca::arch::bgq::pmu>;
+
 #elif defined(__ppc__) || defined(_ARCH_PPC) || defined(__PPC__)
 #  include "ppc.h"
 #else
