@@ -24,6 +24,18 @@ template <const char *Reason> struct null_resolver {
     throw std::runtime_error(Reason);
   }
 };
+
+template <typename TIMESTAMP, const char *REASON> struct basic_pmu {
+  using resolver_type = upca::arch::detail::null_resolver<REASON>;
+  template <typename T> basic_pmu(const T &) {}
+
+  uint64_t timestamp_begin() { return TIMESTAMP::timestamp(); }
+  uint64_t timestamp_end() { return TIMESTAMP::timestamp(); }
+
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) { return 0; }
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) { return 0; }
+};
+
 } // namespace detail
 
 template <typename ARCH> class arch_common_base final {

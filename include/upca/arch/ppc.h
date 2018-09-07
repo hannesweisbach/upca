@@ -6,9 +6,9 @@ namespace ppc {
 
 namespace {
 static constexpr const char reason[] = "PMU support not implemented for PPC.";
-}
 
-class ppc_pmu {
+struct ppc_timestamp {
+
   static inline uint64_t timestamp() {
 #if defined(__powerpc64__) || defined(_ARCH_PPC64)
     uint64_t ticks;
@@ -24,17 +24,10 @@ class ppc_pmu {
     return (static_cast<uint64_t>(tbu0) << 32) | tbl;
 #endif
   }
-
-public:
-  using resolver_type = upca::arch::detail::null_resolver<reason>;
-  template <typename T> ppc_pmu(const T &) {}
-
-  uint64_t timestamp_begin() { return timestamp(); }
-  uint64_t timestamp_end() { return timestamp(); }
-
-  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) { return 0; }
-  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) { return 0; }
 };
+} // namespace
+
+using ppc_pmu = detail::basic_pmu<ppc_timestamp, reason>;
 
 } // namespace ppc
 } // namespace arch
