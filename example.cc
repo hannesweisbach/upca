@@ -18,8 +18,7 @@ int main(int argc, char *argv[]) {
   std::vector<uint64_t> data(4);
 
   auto roi = pcs.configure();
-
-  upca::resolver<upca::arch::aarch32::aarch32_pmu> arm;
+  upca::resolver<upca::arch::aarch32::pmu> arm;
 
   try {
     arm.add("cache-misses");

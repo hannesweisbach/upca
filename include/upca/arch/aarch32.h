@@ -8,7 +8,7 @@ namespace {
 static constexpr const char reason[] =
     "PMU support not implemented for AArch32.";
 
-struct aarch32_timestamp {
+struct timestamp_t {
   static inline uint64_t timestamp() {
     uint32_t value;
     // Read CCNT Register
@@ -18,7 +18,7 @@ struct aarch32_timestamp {
 };
 } // namespace
 
-using aarch32_pmu = detail::basic_pmu<aarch32_timestamp, reason>;
+using pmu = detail::basic_pmu<timestamp_t, reason>;
 
 } // namespace aarch32
 } // namespace arch

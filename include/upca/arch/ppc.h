@@ -7,7 +7,7 @@ namespace ppc {
 namespace {
 static constexpr const char reason[] = "PMU support not implemented for PPC.";
 
-struct ppc_timestamp {
+struct timestamp_t {
 
   static inline uint64_t timestamp() {
 #if defined(__powerpc64__) || defined(_ARCH_PPC64)
@@ -27,7 +27,7 @@ struct ppc_timestamp {
 };
 } // namespace
 
-using ppc_pmu = detail::basic_pmu<ppc_timestamp, reason>;
+using pmu = detail::basic_pmu<timestamp_t, reason>;
 
 } // namespace ppc
 } // namespace arch

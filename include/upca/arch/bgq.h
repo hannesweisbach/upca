@@ -16,14 +16,14 @@ namespace bgq {
 namespace {
 static constexpr const char reason[] = "PMU support not implemented for BG/Q.";
 
-struct timestamp {
-  static inline uint64_t timestamp() { return /*GetTimeBase();*/ 0; }
+struct timestamp_t {
+  static inline uint64_t timestamp() { return GetTimeBase(); }
 };
 } // namespace
 
 #if !defined(HAVE_BGPM)
 
-using pmu = detail::basic_pmu<timestamp, reason>;
+using pmu = detail::basic_pmu<timestamp_t, reason>;
 
 #else
 
@@ -56,8 +56,8 @@ public:
     Bgpm_Disable();
   }
 
-  uint64_t timestamp_begin() { return bgq_timestamp::timestamp(); }
-  uint64_t timestamp_end() { return bgq_timestamp::timestamp(); }
+  uint64_t timestamp_begin() { return timestamp_t::timestamp(); }
+  uint64_t timestamp_end() { return timestamp_t::timestamp(); }
 
   gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) {
     const auto num_events = Bqpm_NumEvents(event_set);

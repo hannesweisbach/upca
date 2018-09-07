@@ -7,7 +7,7 @@ namespace sparc {
 namespace {
 static constexpr const char reason[] = "PMU support not implemented for SPARC.";
 
-struct sparc_timestamp {
+struct timestamp_t {
   static inline uint64_t timestamp() {
     uint64_t value;
     __asm__ volatile("rd %%tick, %0\n" : "=r"(value));
@@ -16,7 +16,7 @@ struct sparc_timestamp {
 };
 } // namespace
 
-using sparc_pmu = detail::basic_pmu<sparc_timestamp, reason>;
+using pmu = detail::basic_pmu<timestamp_t, reason>;
 
 } // namespace sparc
 } // namespace arch
