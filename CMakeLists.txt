@@ -64,15 +64,7 @@ configure_file(config.h.in upca/config.h)
 include_directories(include ${CMAKE_CURRENT_BINARY_DIR})
 
 add_subdirectory(3rd)
-
-add_library(upca INTERFACE)
-
-# add include folders to the library and targets that consume it
-target_include_directories(upca INTERFACE
-  $<BUILD_INTERFACE: ${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE: ${CMAKE_CURRENT_BINARY_DIR}>
-)
-target_link_libraries(upca INTERFACE GSL jevents)
+add_subdirectory(src)
 
 install(DIRECTORY include/upca DESTINATION include)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/upca/config.h DESTINATION include/upca)

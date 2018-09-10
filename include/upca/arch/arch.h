@@ -70,7 +70,11 @@ public:
 } // namespace upca
 
 #ifdef __aarch64__
+
 #  include "aarch64.h"
+
+using pmu = upca::arch::arch_common_base<upca::arch::aarch64::pmu>;
+
 #elif defined(__ARM_ARCH_7A__)
 
 #  include "aarch32.h"
