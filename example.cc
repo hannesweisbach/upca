@@ -7,6 +7,7 @@ int main(int, char *[]) {
   using upca_backend = pmu;
 
   upca::resolver<upca_backend> pcs;
+
   try {
     pcs.add("cache-misses");
     pcs.add("l1d.repl");
@@ -21,11 +22,6 @@ int main(int, char *[]) {
   std::vector<uint64_t> data(4);
 
   auto roi = pcs.configure();
-  upca::resolver<upca::arch::aarch32::pmu> arm;
-
-  try {
-    arm.add("cache-misses");
-  } catch (const std::runtime_error &e) {
-    std::cout << e.what() << std::endl;
-  }
+  roi.start(data);
+  roi.stop(data);
 }
