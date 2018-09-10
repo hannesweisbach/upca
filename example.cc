@@ -1,6 +1,9 @@
-#include "upca/upca.h"
+#include <iostream>
+#include <vector>
 
-int main(int argc, char *argv[]) {
+#include <upca/upca.h>
+
+int main(int, char *[]) {
   using upca_backend = pmu;
 
   upca::resolver<upca_backend> pcs;
