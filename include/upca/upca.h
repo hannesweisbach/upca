@@ -74,8 +74,8 @@ public:
   const_iterator cend() const { return counters_.cend(); }
 
   /* Get PMU backend. Thread has to be pinned to a CPU before this is called */
-  BACKEND configure(const unsigned additional_counters = 0) const {
-    return BACKEND(counters_, additional_counters);
+  std::unique_ptr<BACKEND> configure(const unsigned additional_counters = 0) const {
+    return std::make_unique<BACKEND>(counters_, additional_counters);
   }
 };
 

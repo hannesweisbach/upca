@@ -21,7 +21,9 @@ int main(int, char *[]) {
 
   std::vector<uint64_t> data(4);
 
+  /* thread needs to be pinned before configure is called */
+
   auto roi = pcs.configure();
-  roi.start(data);
-  roi.stop(data);
+  roi->start(data);
+  roi->stop(data);
 }

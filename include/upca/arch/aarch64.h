@@ -79,6 +79,8 @@ public:
     }
   }
 
+  pmu(const pmu &) = delete;
+
   uint64_t timestamp_begin() { return timestamp(); }
   uint64_t timestamp_end() { return timestamp(); }
 
