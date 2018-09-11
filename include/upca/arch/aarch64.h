@@ -5,12 +5,15 @@ namespace arch {
 namespace aarch64 {
 
 class resolver {
+  const bool pmu_enabled_;
+  const unsigned max_counters_;
 public:
-  static const unsigned max_counters;
-
   using config_type = uint64_t;
+  resolver();
 
-  static uint64_t resolve(const std::string &name);
+  bool pmu_enabled() const { return pmu_enabled_; }
+  unsigned max_counters() const { return max_counters_; }
+  uint64_t resolve(const std::string &name);
 };
 
 class pmu {

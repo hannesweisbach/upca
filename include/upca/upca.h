@@ -27,12 +27,14 @@ template <typename BACKEND> class resolver {
     typename BACKEND::resolver_type::config_type data_;
 
   public:
-    description(std::string name, const unsigned size, const unsigned offset)
+    description(std::string name, const unsigned size, const unsigned offset,
+                const typename BACKEND::resolver_type &resolver)
         : name_(std::move(name)), size_(size), offset_(offset),
-          data_(BACKEND::resolver_type::resolve(name_)) {}
-    description(const char *name, const unsigned size, const unsigned offset)
+          data_(resolver.resolve(name_)) {}
+    description(const char *name, const unsigned size, const unsigned offset,
+                const typename BACKEND::resolver_type &resolver)
         : name_(name), size_(size), offset_(offset),
-          data_(BACKEND::resolver_type::resolve(name_)) {}
+          data_(resolver.resolve(name_)) {}
 
     const std::string &name() const { return name_; }
     unsigned size() const { return size_; }
@@ -41,6 +43,7 @@ template <typename BACKEND> class resolver {
   };
 
   std::vector<description> counters_;
+  typename BACKEND::resolver_type resolver_;
 
 public:
   using value_type = description;
@@ -48,11 +51,11 @@ public:
   using const_iterator = typename std::vector<description>::const_iterator;
 
   void add(const char *const name, const unsigned size = 8) {
-    counters_.emplace_back(name, size, counters_.size());
+    counters_.emplace_back(name, size, counters_.size(), resolver_);
   }
 
   void add(std::string name, const unsigned size = 8) {
-    counters_.emplace_back(std::move(name), size, counters_.size());
+    counters_.emplace_back(std::move(name), size, counters_.size(), resolver_);
   }
 
   size_t size() const { return counters_.size() + 1; }

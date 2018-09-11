@@ -9,6 +9,26 @@ namespace upca {
 namespace arch {
 namespace aarch64 {
 
+static bool is_pmu_enabled() {
+  enum PMUSERENR_EL0 : uint64_t {
+    EN = 0x1,
+    SW = 0x2,
+    CR = 0x4,
+    ER = 0x8,
+  };
+
+  uint64_t value;
+  __asm__ volatile("mrs %0, PMUSERENR_EL0" : "=r"(value));
+
+  if (!(value & (PMUSERENR_EL0::EN | PMUSERENR_EL0::CR))) {
+    throw std::runtime_error(
+        "EL0 access to PMU disabled: cycle counter not readable.");
+  }
+
+  /* PMUSERENR_EL=::ER is not sufficient. */
+  return value & (PMUSERENR_EL0::EN);
+}
+
 static unsigned get_num_counters() {
   uint64_t value;
   __asm__ volatile("mrs %0, PMCR_EL0" : "=r"(value));
@@ -18,12 +38,22 @@ static unsigned get_num_counters() {
   }
 
   const unsigned num_counters = (value >> 11) & 0x1f;
+
+  std::cerr << "Architecture supports up to " << num_counters
+            << " performance counters." << std::endl;
+
   return num_counters;
 }
 
-const unsigned resolver::max_counters = get_num_counters();
+resolver::resolver()
+    : pmu_enabled_(is_pmu_enabled()),
+      max_counters_(pmu_enabled_ ? get_num_counters() : 0) {}
 
 uint64_t resolver::resolve(const std::string &name) {
+  if (!pmu_enabled_) {
+    throw std::runtime_error("PMU not enabled.");
+  }
+
   /* ARM ARM D5.10 */
   struct pmu_event {
     const char *name;
