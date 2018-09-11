@@ -51,7 +51,8 @@ public:
 
   template <typename C>
   arch_common_base(const C &pmcs, const unsigned external_pmcs = 0)
-      : slice_(gsl::narrow<ptrdiff_t>(pmcs.size() + external_pmcs)), arch_(pmcs) {}
+      : slice_(gsl::narrow<ptrdiff_t>(pmcs.size() + external_pmcs)),
+        arch_(pmcs) {}
 
   gsl::span<uint64_t>::index_type start(gsl::span<uint64_t> output) {
     const auto count = arch_.start(output.subspan(1, slice_ - 1));

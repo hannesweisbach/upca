@@ -64,6 +64,10 @@ public:
     return sum;
   }
 
+  const description &
+  at(const typename std::vector<description>::size_type pos) const {
+    return counters_.at(pos);
+  }
   const_iterator begin() const { return counters_.cbegin(); }
   const_iterator end() const { return counters_.cend(); }
   const_iterator cbegin() const { return counters_.cbegin(); }
@@ -71,7 +75,8 @@ public:
 
   /* Get PMU backend. Thread has to be pinned to a CPU before this is called */
   std::unique_ptr<BACKEND> configure(const unsigned additional_counters = 0) const {
-    return std::make_unique<BACKEND>(counters_, additional_counters);
+    /* meh. add +1 for the "out-of-band" cycles counter :/ */
+    return std::make_unique<BACKEND>(counters_, additional_counters + 1);
   }
 };
 
