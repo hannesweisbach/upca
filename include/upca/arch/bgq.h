@@ -1,11 +1,13 @@
 #pragma once
 
-//#include <hwi/include/bqc/A2_inlines.h>
+#include <hwi/include/bqc/A2_inlines.h>
+
 #if defined(HAVE_BGPM)
 #include <bgpm/include/bgpm.h>
 #endif
 
 #include <stdexcept>
+#include <string>
 
 #include <cstring>
 
@@ -34,6 +36,13 @@ using pmu = detail::basic_pmu<timestamp_t, reason>;
  * Source: https://github.com/jedbrown/bgq-driver
  * Bqpm_PrintOnError(), Bgpm_ExitOnError() -> default: yes
  */
+
+class resolver {
+public:
+  using config_type = unsigned;
+
+  static config_type resolve(const std::string &name);
+};
 
 class pmu {
   int event_set = -1;
