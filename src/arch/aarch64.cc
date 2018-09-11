@@ -39,9 +39,6 @@ static unsigned get_num_counters() {
 
   const unsigned num_counters = (value >> 11) & 0x1f;
 
-  std::cerr << "Architecture supports up to " << num_counters
-            << " performance counters." << std::endl;
-
   return num_counters;
 }
 
@@ -49,7 +46,7 @@ resolver::resolver()
     : pmu_enabled_(is_pmu_enabled()),
       max_counters_(pmu_enabled_ ? get_num_counters() : 0) {}
 
-uint64_t resolver::resolve(const std::string &name) {
+uint64_t resolver::resolve(const std::string &name) const {
   if (!pmu_enabled_) {
     throw std::runtime_error("PMU not enabled.");
   }

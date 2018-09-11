@@ -13,7 +13,7 @@ public:
 
   bool pmu_enabled() const { return pmu_enabled_; }
   unsigned max_counters() const { return max_counters_; }
-  uint64_t resolve(const std::string &name);
+  uint64_t resolve(const std::string &name) const;
 };
 
 class pmu {
@@ -29,16 +29,20 @@ class pmu {
     return value;
   }
 
-  static void select_reg(const uint64_t reg) {
-    __asm__ volatile("msr PMSELR_EL0, %0" : : "r"(reg));
+  static void select_reg(const int reg) {
+    __asm__ volatile("msr PMSELR_EL0, %0" : : "r"(gsl::narrow<uint64_t>(reg)));
   }
 
-  static void enable_reg(const uint32_t reg) {
-    __asm__ volatile("msr PMCNTENSET_EL0, %0" : : "r"(static_cast<uint64_t>(1) << reg));
+  static void enable_reg(const int reg) {
+    __asm__ volatile("msr PMCNTENSET_EL0, %0"
+                     :
+                     : "r"(static_cast<uint64_t>(1) << reg));
   }
 
-  static void disable_reg(const uint32_t reg) {
-    __asm__ volatile("msr PMCNTENCLR_EL0, %0" : : "r"(static_cast<uint64_t>(1) << reg));
+  static void disable_reg(const int reg) {
+    __asm__ volatile("msr PMCNTENCLR_EL0, %0"
+                     :
+                     : "r"(static_cast<uint64_t>(1) << reg));
   }
 
   static uint64_t read_current_counter() {
@@ -56,8 +60,6 @@ public:
   using resolver_type = resolver;
 
   template <typename T> pmu(const T &pmcs) {
-    uint64_t value;
-
     for (const auto &pmc : pmcs) {
       select_reg(counters);
       write_type(pmc.data());
@@ -65,7 +67,7 @@ public:
     }
 
     for (int i = counters; i > 0; --i) {
-      enable_reg((unsigned)(i - 1));
+      enable_reg(i - 1);
       isb();
     }
   }
@@ -79,14 +81,18 @@ public:
 
   uint64_t timestamp_begin() { return timestamp(); }
   uint64_t timestamp_end() { return timestamp(); }
-  
-  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t> ) {
+
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) {
     for (int i = 0; i < counters; ++i) {
       // clear overflow flag
-      __asm__ volatile("msr PMOVSCLR_EL0, %0" : : "r"(static_cast<uint64_t>(1) << i));
+      __asm__ volatile("msr PMOVSCLR_EL0, %0"
+                       :
+                       : "r"(static_cast<uint64_t>(1) << i));
       select_reg(i);
       // set counter register to 0
-      __asm__ volatile("msr PMXEVCNTR_EL0, %0" : : "r"(static_cast<uint64_t>(0)));
+      __asm__ volatile("msr PMXEVCNTR_EL0, %0"
+                       :
+                       : "r"(static_cast<uint64_t>(0)));
     }
 
     isb();
@@ -95,7 +101,10 @@ public:
 
   gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> o) {
     uint64_t ovf = 0;
-    __asm__ volatile("mrs %0, PMOVSSET_EL0" : "=r"(ovf));
+    if (counters > 0) {
+      /* counters might be set to 0 because PM in EL0 is disabled */
+      __asm__ volatile("mrs %0, PMOVSSET_EL0" : "=r"(ovf));
+    }
 
     for (int i = 0; i < counters; ++i) {
       select_reg(i);
