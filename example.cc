@@ -15,7 +15,7 @@ int main(int, char *[]) {
     std::cout << e.what() << std::endl;
   }
   for (const auto &pc : pcs) {
-    using namespace upca::arch;
+    using namespace upca;
     std::cout << pc.data() << std::endl;
   }
 

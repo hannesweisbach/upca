@@ -36,6 +36,9 @@ extern "C" {
 #endif
 
 namespace upca {
+
+std::ostream &operator<<(std::ostream &os, const struct perf_event_attr &c);
+
 namespace arch {
 namespace x86_64 {
 
@@ -94,6 +97,15 @@ static inline int mck_is_mckernel() { return syscall(732) == 0; }
 static inline int mck_is_mckernel() { return 0; }
 
 #endif
+
+class resolver {
+public:
+  using config_type = struct perf_event_attr;
+
+  resolver();
+
+  struct perf_event_attr resolve(const std::string &name) const;
+};
 
 class fd {
   int fd_;
@@ -319,7 +331,7 @@ template <typename ACCESS> class msr_pmc final : ACCESS, public x86_pmc_base {
   int active = 0;
 
 public:
-  using resolver_type = upca::arch::jevents_resolver;
+  using resolver_type = resolver;
 
   template <typename T> msr_pmc(const T &pmcs) {
     for (const auto &pmc : pmcs) {
@@ -388,7 +400,7 @@ class linux_jevents final : public x86_pmc_base {
   std::vector<rdpmc_t> rdpmc_ctxs;
 
 public:
-  using resolver_type = upca::arch::jevents_resolver;
+  using resolver_type = resolver;
 
   template <typename T> linux_jevents(const T &pmcs) {
     for (const auto &pmc : pmcs) {
@@ -419,7 +431,7 @@ class linux_perf final : public x86_pmc_base {
   std::vector<std::unique_ptr<fd>> perf_fds;
 
 public:
-  using resolver_type = upca::arch::jevents_resolver;
+  using resolver_type = resolver;
 
   template <typename T> linux_perf(const T &pmcs) {
     for (const auto &pmc : pmcs) {
@@ -476,7 +488,7 @@ class x86_linux_mckernel : public x86_64_base_pmu {
   std::unique_ptr<x86_pmc_base> backend_;
 
 public:
-  using resolver_type = upca::arch::jevents_resolver;
+  using resolver_type = resolver;
 
   template <typename T>
   x86_linux_mckernel(const T &pmcs)

@@ -10,10 +10,6 @@
 
 #include <upca/config.h>
 
-#ifdef JEVENTS_FOUND
-#include "backends/jevents.h"
-#endif
-
 #include "arch/arch.h"
 
 namespace upca {
