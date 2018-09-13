@@ -20,7 +20,7 @@ template <typename BACKEND> class resolver {
     std::string name_;
     unsigned size_;
     unsigned offset_;
-    typename BACKEND::resolver_type::config_type data_;
+    decltype(typename BACKEND::resolver_type().resolve({})) data_;
 
   public:
     description(std::string name, const unsigned size, const unsigned offset,

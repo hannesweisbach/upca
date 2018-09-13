@@ -39,9 +39,7 @@ using pmu = detail::basic_pmu<timestamp_t, reason>;
 
 class resolver {
 public:
-  using config_type = unsigned;
-
-  static config_type resolve(const std::string &name);
+  static unsigned resolve(const std::string &name);
 };
 
 class pmu {

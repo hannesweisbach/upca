@@ -100,8 +100,6 @@ static inline int mck_is_mckernel() { return 0; }
 
 class resolver {
 public:
-  using config_type = struct perf_event_attr;
-
   resolver();
 
   struct perf_event_attr resolve(const std::string &name) const;

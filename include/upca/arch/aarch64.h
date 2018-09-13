@@ -8,7 +8,6 @@ class resolver {
   const bool pmu_enabled_;
   const unsigned max_counters_;
 public:
-  using config_type = uint64_t;
   resolver();
 
   bool pmu_enabled() const { return pmu_enabled_; }
