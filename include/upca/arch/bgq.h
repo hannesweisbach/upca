@@ -43,19 +43,23 @@ public:
 };
 
 class pmu {
-  int event_set = -1;
+  unsigned event_set;
 
 public:
-  using resolver_type = upca::platform::bgpm_resolver;
+  using resolver_type = resolver;
 
   template <typename T>
   pmu(const T &pmcs)
-      : event_set((Bgpm_Init(BGPM_MODE_SWDISTRIB), Bgpm_CreateEventSet())) {
+      : event_set((static_cast<void>(Bgpm_Init(BGPM_MODE_SWDISTRIB)),
+                   static_cast<unsigned>(Bgpm_Init(BGPM_MODE_SWDISTRIB)))) {
     for (const auto &pmc : pmcs) {
       Bgpm_AddEvent(event_set, pmc.data());
     }
 
-    Bgpm_Apply(event_set);
+    if (!pmcs.empty()) {
+      /* Using an empty event set is an error */
+      Bgpm_Apply(event_set);
+    }
   }
 
   ~pmu() {
@@ -63,25 +67,32 @@ public:
     Bgpm_Disable();
   }
 
+  pmu(const pmu &) = delete;
+  pmu(pmu &&) = delete;
+
   uint64_t timestamp_begin() { return timestamp_t::timestamp(); }
   uint64_t timestamp_end() { return timestamp_t::timestamp(); }
 
   gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) {
-    const auto num_events = Bqpm_NumEvents(event_set);
+    const auto num_events = Bgpm_NumEvents(event_set);
 
-    Bgpm_Reset(event_set);
-    Bgpm_Start(event_set);
+    if (num_events > 0) {
+      Bgpm_Reset(event_set);
+      Bgpm_Start(event_set);
+    }
 
     return num_events;
   }
 
   gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t> o) {
-    Bgpm_Stop(event_set);
-
     const auto num_events = Bgpm_NumEvents(event_set);
 
+    if (num_events > 0) {
+      Bgpm_Stop(event_set);
+    }
+
     for (int i = 0; i < num_events; ++i) {
-      Bgpm_ReadEvent(event_set, i, &o[i]);
+      Bgpm_ReadEvent(event_set, static_cast<unsigned>(i), &o[i]);
     }
 
     return 0;
