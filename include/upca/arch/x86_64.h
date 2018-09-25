@@ -209,7 +209,7 @@ template <typename POLICY> static void pmu_info(const POLICY &msr) {
 }
 
 struct x86_pmc_base {
-  virtual ~x86_pmc_base() = default;
+  virtual ~x86_pmc_base();
   virtual gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) = 0;
   virtual gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) = 0;
 };
