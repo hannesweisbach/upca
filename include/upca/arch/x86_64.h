@@ -511,8 +511,8 @@ public:
   using resolver_type = upca::arch::detail::null_resolver<reason>;
   template <typename T> x86_64_pmu(const T &) {}
 
-  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) {}
-  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) {}
+  gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) { return 0; }
+  gsl::span<uint64_t>::index_type stop(gsl::span<uint64_t>) { return 0; }
 };
 
 #endif /* JEVENTS_FOUND */
