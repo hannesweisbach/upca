@@ -4,7 +4,6 @@ namespace upca {
 namespace arch {
 namespace sparc {
 
-namespace {
 static constexpr const char reason[] = "PMU support not implemented for SPARC.";
 
 struct timestamp_t {
@@ -14,7 +13,6 @@ struct timestamp_t {
     return value;
   }
 };
-} // namespace
 
 using pmu = detail::basic_pmu<timestamp_t, reason>;
 

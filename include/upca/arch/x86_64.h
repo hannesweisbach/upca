@@ -501,10 +501,8 @@ public:
 
 #else
 
-namespace {
 static constexpr const char reason[] =
     "PMC support not compiled in; libjevents missing";
-}
 
 class x86_64_pmu : public x86_64_base_pmu {
 public:
