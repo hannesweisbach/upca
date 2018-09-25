@@ -4,7 +4,9 @@ namespace upca {
 namespace arch {
 namespace ppc {
 
-static constexpr const char reason[] = "PMU support not implemented for PPC.";
+struct Reason {
+  static constexpr const char reason[] = "PMU support not implemented for PPC.";
+};
 
 struct timestamp_t {
 
@@ -25,7 +27,7 @@ struct timestamp_t {
   }
 };
 
-using pmu = detail::basic_pmu<timestamp_t, reason>;
+using pmu = detail::basic_pmu<timestamp_t, Reason>;
 
 } // namespace ppc
 } // namespace arch

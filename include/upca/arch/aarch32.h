@@ -4,8 +4,10 @@ namespace upca {
 namespace arch {
 namespace aarch32 {
 
-static constexpr const char reason[] =
-    "PMU support not implemented for AArch32.";
+struct Reason {
+  static constexpr const char reason[] =
+      "PMU support not implemented for AArch32.";
+};
 
 struct timestamp_t {
   static inline uint64_t timestamp() {
@@ -16,7 +18,7 @@ struct timestamp_t {
   }
 };
 
-using pmu = detail::basic_pmu<timestamp_t, reason>;
+using pmu = detail::basic_pmu<timestamp_t, Reason>;
 
 } // namespace aarch32
 } // namespace arch

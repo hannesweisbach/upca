@@ -26,9 +26,14 @@ struct perf_event_attr resolver::resolve(const std::string &name) const {
   }
   return attr;
 }
-#endif
 
 x86_pmc_base::~x86_pmc_base() = default;
+
+#else
+
+constexpr const char Reason::reason[];
+
+#endif
 
 } // namespace x86_64
 } // namespace arch

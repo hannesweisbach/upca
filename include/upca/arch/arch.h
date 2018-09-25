@@ -13,18 +13,18 @@ namespace upca {
 namespace arch {
 
 namespace detail {
-template <const char *Reason> struct null_resolver {
+template <typename Reason> struct null_resolver {
   struct null_type {
     friend std::ostream &operator<<(std::ostream &os, const null_type &) {
       return os;
     }
   };
   static null_type resolve(const std::string &) {
-    throw std::runtime_error(Reason);
+    throw std::runtime_error(Reason::reason);
   }
 };
 
-template <typename TIMESTAMP, const char *REASON> struct basic_pmu {
+template <typename TIMESTAMP, typename REASON> struct basic_pmu {
   using resolver_type = upca::arch::detail::null_resolver<REASON>;
   template <typename T> basic_pmu(const T &) {}
 

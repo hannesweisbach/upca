@@ -15,17 +15,18 @@ namespace upca {
 namespace arch {
 namespace bgq {
 
-namespace {
-static constexpr const char reason[] = "PMU support not implemented for BG/Q.";
+struct Reason {
+  static constexpr const char reason[] =
+      "PMU support not implemented for BG/Q.";
+};
 
 struct timestamp_t {
   static inline uint64_t timestamp() { return GetTimeBase(); }
 };
-} // namespace
 
 #if !defined(HAVE_BGPM)
 
-using pmu = detail::basic_pmu<timestamp_t, reason>;
+using pmu = detail::basic_pmu<timestamp_t, Reason>;
 
 #else
 

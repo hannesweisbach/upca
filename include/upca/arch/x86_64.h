@@ -501,12 +501,14 @@ public:
 
 #else
 
-static constexpr const char reason[] =
-    "PMC support not compiled in; libjevents missing";
+struct Reason {
+  static constexpr const char reason[] =
+      "PMC support not compiled in; libjevents missing";
+};
 
 class x86_64_pmu : public x86_64_base_pmu {
 public:
-  using resolver_type = upca::arch::detail::null_resolver<reason>;
+  using resolver_type = upca::arch::detail::null_resolver<Reason>;
   template <typename T> x86_64_pmu(const T &) {}
 
   gsl::span<uint64_t>::index_type start(gsl::span<uint64_t>) { return 0; }

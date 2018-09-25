@@ -16,6 +16,10 @@ unsigned resolver::resolve(const std::string &name) {
 
   throw std::runtime_error("Event \"" + name + "\" not found.");
 }
+#else
+
+constexpr const char Reason::reason[];
+
 #endif
 
 } // namespace bgq
