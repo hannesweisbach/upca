@@ -38,11 +38,13 @@ constexpr const char Reason::reason[];
 } // namespace x86_64
 } // namespace arch
 
+#if defined(JEVENTS_FOUND)
 std::ostream &operator<<(std::ostream &os, const struct perf_event_attr &c) {
   os << std::hex << c.type << " " << std::dec << " " << c.size << std::hex
      << " " << c.config << std::dec;
   return os;
 }
+#endif
 
 } // namespace upca
 
