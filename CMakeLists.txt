@@ -47,9 +47,11 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
     HINTS ${JEVENTS_DIR}
     PATH_SUFFIXES lib lib32 lib64)
   find_package_handle_standard_args(JEVENTS DEFAULT_MSG JEVENTS_LIBRARIES JEVENTS_INCDIR)
-  add_library(jevents INTERFACE)
-  target_include_directories(jevents INTERFACE $<BUILD_INTERFACE: ${JEVENTS_INCDIR}>)
-  target_link_libraries(jevents INTERFACE $<BUILD_INTERFACE: ${JEVENTS_LIBRARIES}>)
+  if(JEVENTS_FOUND)
+    add_library(jevents INTERFACE)
+    target_include_directories(jevents INTERFACE $<BUILD_INTERFACE: ${JEVENTS_INCDIR}>)
+    target_link_libraries(jevents INTERFACE $<BUILD_INTERFACE: ${JEVENTS_LIBRARIES}>)
+  endif()
 endif()
 
 

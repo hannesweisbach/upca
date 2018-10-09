@@ -18,9 +18,9 @@ target_include_directories(upca INTERFACE
 )
 target_link_libraries(upca PUBLIC GSL)
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+if(JEVENTS_FOUND)
   target_link_libraries(upca PUBLIC jevents)
-elseif(CMAKE_SYSTEM_NAME MATCHES "BlueGene")
+elseif(BGPM_FOUND)
   target_link_libraries(upca PUBLIC bgpm)
 endif()
 
